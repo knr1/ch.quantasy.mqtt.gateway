@@ -46,6 +46,7 @@ import ch.quantasy.mqtt.gateway.client.message.Message;
 import ch.quantasy.mqtt.gateway.client.message.Validator;
 import ch.quantasy.mqtt.gateway.client.message.annotations.AValidator;
 import ch.quantasy.mqtt.gateway.client.message.annotations.ArraySize;
+import ch.quantasy.mqtt.gateway.client.message.annotations.ArraySizes;
 import ch.quantasy.mqtt.gateway.client.message.annotations.Choice;
 import ch.quantasy.mqtt.gateway.client.message.annotations.Default;
 import ch.quantasy.mqtt.gateway.client.message.annotations.Fraction;
@@ -176,6 +177,28 @@ public abstract class AyamlServiceContract extends AServiceContract {
                     desc += "min: " + annotation.min() + " ";
                     desc += "max: " + annotation.max();
                     desc += ">";
+                    desc += endOfLine;
+                    if (required) {
+                        descriptionRequired += desc;
+                    } else {
+                        descriptionOptional += desc;
+                    }
+                }
+                if (field.isAnnotationPresent(ArraySizes.class)) {
+                    String desc = indentation;
+
+                    desc += field.getName() + ": ";
+
+                    desc += "Array <[";
+                    ArraySizes annotation = field.getAnnotation(ArraySizes.class);
+                    String separator = "";
+                    for (ArraySize arraySize : annotation.values()) {
+                        desc += separator;
+                        desc += "min: " + arraySize.min() + " ";
+                        desc += "max: " + arraySize.max();
+                        separator = ",";
+                    }
+                    desc += "]>";
                     desc += endOfLine;
                     if (required) {
                         descriptionRequired += desc;
@@ -364,7 +387,7 @@ public abstract class AyamlServiceContract extends AServiceContract {
                 } else if (c != o && Validator.class.isAssignableFrom(c)) {
                     String desc = indentation;
                     desc += field.getName() + ":";
-                    desc+=endOfLine;
+                    desc += endOfLine;
                     desc += getDataFormatDescription(c, indentation + "  ");
                     if (required) {
                         descriptionRequired += desc;
@@ -375,7 +398,7 @@ public abstract class AyamlServiceContract extends AServiceContract {
                     c = c.getComponentType();
                     if (Validator.class.isAssignableFrom(c)) {
                         String desc = indentation + "  " + c.getSimpleName() + ":";
-                        desc +=endOfLine;
+                        desc += endOfLine;
                         desc += getDataFormatDescription(c, indentation + "    ");
                         if (required) {
                             descriptionRequired += desc;
@@ -424,7 +447,7 @@ public abstract class AyamlServiceContract extends AServiceContract {
         if (descriptionOptional.length() > 0 && descriptionRequired.length() > 0 && !descriptionRequired.endsWith("\n")) {
             delim = "\n";
         }
-        return  descriptionRequired + delim + descriptionOptional;
+        return descriptionRequired + delim + descriptionOptional;
     }
 
     public static String enumDescription(Class enumType, String fieldName, String indentation) {

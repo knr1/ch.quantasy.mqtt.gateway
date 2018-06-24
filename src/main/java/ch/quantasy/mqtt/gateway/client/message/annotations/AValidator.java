@@ -109,8 +109,47 @@ public abstract class AValidator implements Validator {
                     if (size < annotation.min() || size > annotation.max()) {
                         return false;
                     }
+                }
+                if (field.isAnnotationPresent(ArraySizes.class)) {
+                    ArraySizes annotation = field.getAnnotation(ArraySizes.class);
+                    boolean isValid = false;
+                    for (ArraySize arraySize : annotation.values()) {
+                        int size = -1;
+                        if (object instanceof boolean[]) {
+                            size = ((boolean[]) (object)).length;
+                        } else if (object instanceof byte[]) {
+                            size = ((byte[]) (object)).length;
+                        } else if (object instanceof char[]) {
+                            size = ((char[]) (object)).length;
+                        } else if (object instanceof short[]) {
+                            size = ((short[]) (object)).length;
+                        } else if (object instanceof int[]) {
+                            size = ((int[]) (object)).length;
+                        } else if (object instanceof long[]) {
+                            size = ((long[]) (object)).length;
+                        } else if (object instanceof float[]) {
+                            size = ((float[]) (object)).length;
+                        } else if (object instanceof double[]) {
+                            size = ((double[]) (object)).length;
+                        } else if (object instanceof Object[]) {
+                            size = ((Object[]) (object)).length;
+                            for (Object val : (Object[]) (object)) {
+                                if (val instanceof Validator) {
+                                    if (!((Validator) val).isValid()) {
+                                        return false;
+                                    }
+                                }
+                            }
+                        }
+                        if (size >= arraySize.min() && size <= arraySize.max()) {
+                            isValid |= true;
+                            break;
+                        }
+                    }
+                    if (!isValid) {
+                        return false;
+                    }
                 } else {
-
                     if (field.isAnnotationPresent(StringSize.class)) {
                         StringSize annotation = field.getAnnotation(StringSize.class);
                         if (((String) object).length() < annotation.min()) {
@@ -199,6 +238,7 @@ public abstract class AValidator implements Validator {
                 field.setAccessible(false);
             }
         }
+
         return true;
     }
 }
